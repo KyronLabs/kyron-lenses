@@ -1,0 +1,5 @@
+# Build output. The workflow makes these; nothing here should be committed.
+site/
+contact-sheet.png
+lens-sheet.png
+__pycache__/

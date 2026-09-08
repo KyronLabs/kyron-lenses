@@ -1,0 +1,110 @@
+name: catalogue
+
+# Every push and every proposed change. A lens the app would silently drop
+# should fail here, in front of whoever wrote it, rather than on a phone
+# where the explanation is a log line nobody reads.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Check and render
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - run: pip install --quiet pillow numpy
+
+      # The same rules Lens.tryParse applies in the app.
+      - name: Every lens is one the app can read
+        run: python3 tools/lens.py check lenses.json
+
+      # The preview would be worthless if it disagreed with what the camera
+      # draws, so this compares it against output captured from Flutter's own
+      # ColorFilter.matrix. If it ever fails, the tool is lying and every
+      # lens tuned with it since is suspect.
+      - name: The preview still renders exactly like Flutter
+        run: python3 tools/lens.py verify tools/flutter-probe.json
+
+      - name: Render every lens
+        run: python3 tools/lens.py preview lenses.json sample.png -o contact-sheet.png --columns 3 --size 300
+
+      # This is what an Actions artifact is actually for: something a human
+      # wants to look at on the pull request. It is *not* how the app gets the
+      # catalogue -- artifacts need authentication to download and expire.
+      - name: Attach the contact sheet for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: contact-sheet
+          path: contact-sheet.png
+          retention-days: 30
+
+      - name: Build the site
+        if: github.ref == 'refs/heads/main'
+        run: |
+          mkdir -p site
+          cp lenses.json site/
+          cp contact-sheet.png site/
+          # So a browser opening the URL sees something, and a person can tell
+          # at a glance whether the published catalogue is the one they meant.
+          python3 - <<'PY'
+          import json
+          lenses = json.load(open('lenses.json'))['lenses']
+          rows = '\n'.join(
+              f'<tr><td><code>{l["id"]}</code></td><td>{l["name"]}</td>'
+              f'<td>{l.get("author") or ""}</td></tr>' for l in lenses)
+          open('site/index.html', 'w').write(f"""<!doctype html>
+          <meta charset="utf-8"><title>Kyron lenses</title>
+          <meta name="viewport" content="width=device-width,initial-scale=1">
+          <style>
+            :root {{ color-scheme: light dark; }}
+            body {{ font: 15px/1.6 system-ui, sans-serif; max-width: 46rem;
+                   margin: 3rem auto; padding: 0 1rem; }}
+            table {{ border-collapse: collapse; width: 100%; }}
+            td, th {{ text-align: left; padding: .35rem .6rem;
+                     border-bottom: 1px solid #8883; }}
+            img {{ max-width: 100%; }}
+          </style>
+          <h1>Kyron lenses</h1>
+          <p>{len(lenses)} lenses. The app reads
+          <a href="lenses.json">lenses.json</a>; this page is for people.</p>
+          <table><tr><th>id</th><th>name</th><th>author</th></tr>
+          {rows}</table>
+          <h2>What they look like</h2>
+          <p>A colour chart through every lens: skin tones, nature, primaries,
+          a step wedge and a ramp.</p>
+          <img src="contact-sheet.png" alt="every lens applied to a colour chart">
+          """)
+          PY
+
+      - name: Upload the site
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  publish:
+    name: Publish the catalogue
+    # The app fetches from Pages: a stable public URL, on a CDN, that needs no
+    # token. Actions artifacts cannot do that job.
+    if: github.ref == 'refs/heads/main'
+    needs: check
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4
