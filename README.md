@@ -14,7 +14,7 @@ it up.
 | `sample.png` | A colour chart: skin tones, nature, primaries, a step wedge and a ramp. |
 | `format-vectors.json` | The spec, as cases. **The app runs this exact file too.** |
 | `docs/FORMAT.md` | The format, the rules, and what it deliberately cannot do. |
-| `docs/AR_LENSES.md` | Where this goes next: lenses attached to a face, and the decisions that come first. |
+| `docs/AR_LENSES.md` | How the face tracking was chosen, and what it costs. |
 | `tools/face.py` | Face tracking on the desktop, so AR placement can be checked without a phone. |
 
 ## This is what the app adds, not everything it has
@@ -26,17 +26,32 @@ the camera actually renders.
 
 `lenses.json` is what gets added on top.
 
-## A lens is twenty numbers
+## What a lens can be
 
-That is the whole format — a 4×5 colour matrix — and it is why lenses can be a
-product rather than a release.
+Three things, and a lens may be any combination of them:
 
-It is also why downloading one is safe. **A lens is data, not code.** There is
-no shader to compile and nothing to execute, so the worst a hostile file can do
-is look ugly. Had lenses been fragment shaders — which is what blur, warp or
-face tracking would need — serving them from a catalogue would mean running a
-stranger's program on somebody's phone. That is a different product with a
-different threat model, and this is deliberately not it.
+| | |
+|:--|:--|
+| A **colour lens** | A 4×5 matrix over every pixel. Twenty numbers. |
+| A **face lens** (`"schema": 2`) | Pictures hung on a tracked face, sized in pupil-gaps. |
+| An **effect lens** (`"schema": 3`) | The face itself changed: a region filled with skin sampled off that same face, or everything frosted except a slot. |
+
+All of it is why lenses can be a product rather than a release.
+
+It is also why downloading one is safe. **A lens is data, not code.** It names
+things the app already knows how to do — a matrix, an anchor from a list of
+five, a region from a list of three — and the app owns every line that does the
+drawing. There is no shader to compile and nothing to execute, so the worst a
+hostile file can do is look wrong.
+
+That property is not free, and it is the reason the format is shaped the way it
+is. Blur, warp and tracking are exactly what a fragment shader is for, and
+serving shaders from a catalogue means running a stranger's program on
+somebody's phone. So the two effects that need a blur are **named**, not
+described: a lens picks `frost` and says how strong, it does not get to say
+what a blur is. An image asset is the one place a lens brings its own bytes,
+which is a decoder's worth of attack surface — hence HTTPS only, and the 4 MB
+ceiling the app applies when fetching one.
 
 ## Adding one
 

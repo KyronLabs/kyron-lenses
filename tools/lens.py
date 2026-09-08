@@ -32,13 +32,86 @@ MAX_OFFSET = 255.0
 ID = re.compile(r'^[a-z0-9][a-z0-9_-]*$')
 
 # The newest lens shape. 1: a colour matrix. 2: attachments on a tracked face.
+# 3: effects that change the face instead of hanging something on it.
 # Kept in step with Lens.supportedSchema in the app -- format-vectors.json is
 # what stops the two drifting.
-SUPPORTED_SCHEMA = 2
+SUPPORTED_SCHEMA = 3
 ANCHORS = ('eyes', 'nose', 'mouth', 'forehead', 'chin')
 MAX_ATTACHMENTS = 8
 MAX_ATTACHMENT_WIDTH = 12.0
 MAX_ATTACHMENT_OFFSET = 8.0
+
+# Regions an effect may name, from FaceRegionKind in the app.
+REGIONS = ('lowerFace', 'eyes', 'face')
+MAX_EFFECTS = 4
+
+# Every number an effect takes, with its default and the range it must be in.
+# Ranges are nonsense limits rather than safety ones: an effect cannot do
+# anything dangerous, only look wrong. Blur and feather are in pupil-gaps, so
+# two of them is already a face and a half.
+EFFECT_NUMBERS = {
+    'fill': {'feather': (0.14, 0.0, 2.0), 'keepShading': (0.35, 0.0, 1.0)},
+    'frost': {
+        'blur': (0.16, 0.0, 2.0),
+        'desaturate': (0.3, 0.0, 1.0),
+        'lift': (0.16, 0.0, 1.0),
+        'feather': (0.05, 0.0, 2.0),
+    },
+}
+
+
+def effect_problems(item, where):
+    """Everything wrong with one effect.
+
+    Same rules as LensEffect.tryParse in the app, down to the treatment of an
+    explicit null: the app reads `json['feather'] ?? 0.14`, so a null there is
+    the default rather than an error, and this has to agree or a lens passes
+    here and disappears on the phone.
+    """
+    found = []
+    if not isinstance(item, dict):
+        return [f'{where}: not an object']
+
+    kind = item.get('kind')
+    if kind not in EFFECT_NUMBERS:
+        return [
+            f'{where}: kind {kind!r} must be one of '
+            f'{", ".join(sorted(EFFECT_NUMBERS))}'
+        ]
+
+    for field, (default, low, high) in EFFECT_NUMBERS[kind].items():
+        value = item.get(field)
+        if value is None:
+            value = default
+        if not _is_number(value):
+            found.append(f'{where}: {field} {value!r} is not a number')
+        elif not low <= value <= high:
+            found.append(f'{where}: {field} {value} is outside {low} to {high}')
+
+    if kind == 'fill':
+        region = item.get('region')
+        if region not in REGIONS:
+            found.append(
+                f'{where}: region {region!r} must be one of '
+                f'{", ".join(REGIONS)}'
+            )
+    else:
+        # A blur of zero is not frost, it is nothing. Refused rather than
+        # published as a lens that appears to do something and does not.
+        blur = item.get('blur')
+        if blur is None:
+            blur = EFFECT_NUMBERS['frost']['blur'][0]
+        if _is_number(blur) and blur <= 0:
+            found.append(f'{where}: blur must be above 0, not {blur}')
+
+        reveal = item.get('reveal')
+        if reveal is not None and reveal not in REGIONS:
+            found.append(
+                f'{where}: reveal {reveal!r} must be one of '
+                f'{", ".join(REGIONS)}'
+            )
+
+    return found
 
 
 def attachment_problems(item, where):
@@ -162,6 +235,21 @@ def problems(lens):
                 found.append(
                     'attachments need schema 2; a lens claiming schema 1 with '
                     'attachments is lying about what it needs to be drawn'
+                )
+
+    effects = lens.get('effects')
+    if effects is not None:
+        if not isinstance(effects, list):
+            found.append('effects must be a list')
+        elif len(effects) > MAX_EFFECTS:
+            found.append(f'at most {MAX_EFFECTS} effects')
+        else:
+            for index, item in enumerate(effects):
+                found.extend(effect_problems(item, f'effect {index}'))
+            if effects and schema < 3:
+                found.append(
+                    'effects need schema 3; a lens claiming less with effects '
+                    'is lying about what it needs to be drawn'
                 )
 
     matrix = lens.get('matrix')

@@ -40,6 +40,36 @@
           "width": 2.6
         }
       ]
+    },
+    {
+      "id": "blank",
+      "name": "Blank",
+      "schema": 3,
+      "author": "Kyron",
+      "effects": [
+        {
+          "kind": "fill",
+          "region": "lowerFace",
+          "feather": 0.14,
+          "keepShading": 0.35
+        }
+      ]
+    },
+    {
+      "id": "frosted",
+      "name": "Frosted",
+      "schema": 3,
+      "author": "Kyron",
+      "effects": [
+        {
+          "kind": "frost",
+          "blur": 0.16,
+          "desaturate": 0.3,
+          "lift": 0.16,
+          "reveal": "eyes",
+          "feather": 0.05
+        }
+      ]
     }
   ]
 }

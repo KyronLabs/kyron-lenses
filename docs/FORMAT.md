@@ -111,6 +111,86 @@ An image is not *nothing*, though: it is a decoder's worth of attack surface,
 which the colour matrices were not. Hence HTTPS, hence the 4 MB ceiling the
 app applies when fetching one.
 
+## Schema 3: changing the face itself
+
+Schema 2 puts a picture *on* a face. Schema 3 changes what is already there.
+
+```json
+{
+  "id": "blank",
+  "name": "Blank",
+  "schema": 3,
+  "effects": [
+    { "kind": "fill", "region": "lowerFace", "feather": 0.14, "keepShading": 0.35 }
+  ]
+}
+```
+
+That one takes somebody's nose and mouth out, under skin the same colour as
+the rest of their face. This one etches the whole picture except their eyes:
+
+```json
+{
+  "id": "frosted",
+  "name": "Frosted",
+  "schema": 3,
+  "effects": [
+    { "kind": "frost", "blur": 0.16, "desaturate": 0.3, "lift": 0.16,
+      "reveal": "eyes", "feather": 0.05 }
+  ]
+}
+```
+
+Two kinds, at most four per lens. A **region** is one of `lowerFace` (the nose
+and mouth, everything below the eye line down to the chin), `eyes` (a slot
+across both) or `face` (the whole thing) -- spelled exactly, so `lowerface` is
+refused.
+
+| `"kind": "fill"` | Rules |
+|:--|:--|
+| `region` | Required. What gets covered. |
+| `feather` | Optional, default `0.14`. How far the edge is blurred, in pupil-gaps, 0 to 2. Zero is a hard edge, which reads as a decal. |
+| `keepShading` | Optional, default `0.35`, 0 to 1. How much of the original shading shows through. Zero is a flat colour and looks painted on. |
+
+| `"kind": "frost"` | Rules |
+|:--|:--|
+| `blur` | Optional, default `0.16`, **above 0** and at most 2, in pupil-gaps. Zero is refused: it is not frost, it is nothing. |
+| `desaturate` | Optional, default `0.3`, 0 to 1. |
+| `lift` | Optional, default `0.16`, 0 to 1. How far everything moves towards white. |
+| `reveal` | Optional, default `eyes`. What stays sharp. |
+| `feather` | Optional, default `0.05`, 0 to 2. |
+
+**A lens with effects must declare `"schema": 3`**, for the same reason schema
+2 exists: an older build would otherwise read it as the do-nothing lens.
+
+### The colour comes off the face, not out of the lens
+
+A fill has no colour field, and that is deliberate. A skin tone written into a
+lens is one person's, and a sticker on everybody else. The app measures it
+instead -- five squares on the forehead and cheekbones, positioned in
+pupil-gaps from the anchor, averaged over the middle half by brightness so a
+strand of hair or a highlight does not drag the answer. If it cannot read one,
+the fill draws nothing rather than guessing.
+
+### Blur, not opacity
+
+Both kinds are the same mechanism: **a masked blur of what is already there**,
+with a colour over it. That is what takes a nose out of a picture. Letting the
+sharp original through at partial opacity does not -- measured, at
+`keepShading` levels that looked right it changed 31,927 pixels and still read
+as an unmodified face, nostrils and lips plainly visible.
+
+Which is why `blur` and `feather` are in pupil-gaps like everything else: the
+effect is the same strength relative to a face whether somebody is at arm's
+length or across a room.
+
+### Still no code
+
+A region is a name from a list of three. There is nothing to execute here
+either -- the app owns every line that does the drawing, and a lens only
+chooses between things it already knows how to do. An effect the app does not
+recognise is refused, not approximated.
+
 ## The catalogue
 
 ```json
@@ -212,8 +292,11 @@ release, no upload, no store review.
 
 Worth saying plainly, because "AR lens" suggests more:
 
-- **No blur, warp, or anything spatial.** A colour matrix reads one pixel and
-  writes one pixel; it cannot see a neighbour. Those need a fragment shader.
+- **No warp.** Nothing moves a pixel to a different place: no bulge, no
+  stretch, no swapped faces. Blur arrived with schema 3, but only as one of
+  two named effects over a region from a list of three -- not as anything a
+  lens can describe for itself. That needs a fragment shader, and a shader is
+  a program.
 - **No animation.** A lens is a constant, not a function of time. Nothing
   responds to an expression yet, though the tracker reports 52 of them.
 - **No 3D.** An attachment is a flat picture. A head turning to the side is

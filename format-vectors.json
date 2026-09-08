@@ -1,5 +1,5 @@
 {
-  "note": "One spec, two implementations. Lens.tryParse in the Kyron app and problems() in tools/lens.py must agree on every case here: a lens that passes the tool, gets published, and is then dropped by the app leaves its explanation in a log line on a stranger's phone. Both sides run these. Adding a rule means adding a case. Cases prefixed ar- cover schema 2: attachments hung on a tracked face.",
+  "note": "One spec, two implementations. Lens.tryParse in the Kyron app and problems() in tools/lens.py must agree on every case here: a lens that passes the tool, gets published, and is then dropped by the app leaves its explanation in a log line on a stranger's phone. Both sides run these. Adding a rule means adding a case. Cases prefixed ar- cover schema 2: attachments hung on a tracked face. Cases prefixed fx- cover schema 3: effects that change the face itself.",
   "cases": [
     {
       "id": "minimal",
@@ -1588,6 +1588,718 @@
             "asset": "https://cdn.example/glasses.png",
             "anchor": "eyes",
             "width": 2.6
+          }
+        ]
+      }
+    },
+    {
+      "id": "fx-fill-minimal",
+      "accept": true,
+      "why": "a kind and a region is all a fill needs; every number has a default",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "schema": 3,
+        "effects": [
+          {
+            "kind": "fill",
+            "region": "lowerFace"
+          }
+        ]
+      }
+    },
+    {
+      "id": "fx-frost-minimal",
+      "accept": true,
+      "why": "frost needs nothing at all -- it reveals the eyes unless told otherwise",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "schema": 3,
+        "effects": [
+          {
+            "kind": "frost"
+          }
+        ]
+      }
+    },
+    {
+      "id": "fx-fill-every-field",
+      "accept": true,
+      "why": "and every number may be given",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "schema": 3,
+        "effects": [
+          {
+            "kind": "fill",
+            "region": "face",
+            "feather": 0.4,
+            "keepShading": 0.0
+          }
+        ]
+      }
+    },
+    {
+      "id": "fx-frost-every-field",
+      "accept": true,
+      "why": "the same for frost",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "schema": 3,
+        "effects": [
+          {
+            "kind": "frost",
+            "blur": 0.9,
+            "desaturate": 1,
+            "lift": 0.5,
+            "reveal": "lowerFace",
+            "feather": 0.2
+          }
+        ]
+      }
+    },
+    {
+      "id": "fx-explicit-nulls-are-defaults",
+      "accept": true,
+      "why": "the app reads json[key] ?? default, so a null is the default rather than an error, and this side has to agree",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "schema": 3,
+        "effects": [
+          {
+            "kind": "frost",
+            "blur": null,
+            "desaturate": null,
+            "lift": null,
+            "reveal": null,
+            "feather": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "fx-feather-zero",
+      "accept": true,
+      "why": "a hard edge is a choice, not a mistake",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "schema": 3,
+        "effects": [
+          {
+            "kind": "fill",
+            "region": "lowerFace",
+            "feather": 0
+          }
+        ]
+      }
+    },
+    {
+      "id": "fx-with-a-matrix",
+      "accept": true,
+      "why": "an effect and a colour transform in one lens",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "schema": 3,
+        "matrix": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "effects": [
+          {
+            "kind": "frost"
+          }
+        ]
+      }
+    },
+    {
+      "id": "fx-with-an-attachment",
+      "accept": true,
+      "why": "and with something hung on the face as well",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "schema": 3,
+        "attachments": [
+          {
+            "asset": "https://example.com/a.png",
+            "anchor": "eyes",
+            "width": 2
+          }
+        ],
+        "effects": [
+          {
+            "kind": "fill",
+            "region": "lowerFace"
+          }
+        ]
+      }
+    },
+    {
+      "id": "fx-four-effects",
+      "accept": true,
+      "why": "four is the most a lens may stack",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "schema": 3,
+        "effects": [
+          {
+            "kind": "frost"
+          },
+          {
+            "kind": "fill",
+            "region": "lowerFace"
+          },
+          {
+            "kind": "frost",
+            "reveal": "face"
+          },
+          {
+            "kind": "fill",
+            "region": "eyes"
+          }
+        ]
+      }
+    },
+    {
+      "id": "fx-empty-list-needs-nothing",
+      "accept": true,
+      "why": "an empty list asks for no effects, so it does not need schema 3",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "matrix": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "effects": []
+      }
+    },
+    {
+      "id": "fx-unknown-kind",
+      "accept": false,
+      "why": "an effect the app cannot do is refused, never guessed at",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "schema": 3,
+        "effects": [
+          {
+            "kind": "shatter"
+          }
+        ]
+      }
+    },
+    {
+      "id": "fx-no-kind",
+      "accept": false,
+      "why": "and so is one that does not say what it is",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "schema": 3,
+        "effects": [
+          {
+            "region": "face"
+          }
+        ]
+      }
+    },
+    {
+      "id": "fx-effect-not-an-object",
+      "accept": false,
+      "why": "each effect is an object",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "schema": 3,
+        "effects": [
+          "frost"
+        ]
+      }
+    },
+    {
+      "id": "fx-effects-not-a-list",
+      "accept": false,
+      "why": "and effects is a list of them",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "schema": 3,
+        "effects": {
+          "kind": "frost"
+        }
+      }
+    },
+    {
+      "id": "fx-too-many-effects",
+      "accept": false,
+      "why": "five is past the limit; nobody stacks that many on one face",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "schema": 3,
+        "effects": [
+          {
+            "kind": "frost"
+          },
+          {
+            "kind": "frost"
+          },
+          {
+            "kind": "frost"
+          },
+          {
+            "kind": "frost"
+          },
+          {
+            "kind": "frost"
+          }
+        ]
+      }
+    },
+    {
+      "id": "fx-one-bad-effect-of-two",
+      "accept": false,
+      "why": "one bad effect makes the whole lens wrong -- half a lens is not one anybody published",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "schema": 3,
+        "effects": [
+          {
+            "kind": "frost"
+          },
+          {
+            "kind": "melt"
+          }
+        ]
+      }
+    },
+    {
+      "id": "fx-fill-without-a-region",
+      "accept": false,
+      "why": "a fill has to say what it covers",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "schema": 3,
+        "effects": [
+          {
+            "kind": "fill"
+          }
+        ]
+      }
+    },
+    {
+      "id": "fx-fill-region-null",
+      "accept": false,
+      "why": "and null is not a region",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "schema": 3,
+        "effects": [
+          {
+            "kind": "fill",
+            "region": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "fx-fill-region-miscased",
+      "accept": false,
+      "why": "region names are exact: lowerface is not lowerFace",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "schema": 3,
+        "effects": [
+          {
+            "kind": "fill",
+            "region": "lowerface"
+          }
+        ]
+      }
+    },
+    {
+      "id": "fx-fill-region-not-a-string",
+      "accept": false,
+      "why": "nor is a number",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "schema": 3,
+        "effects": [
+          {
+            "kind": "fill",
+            "region": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "fx-frost-reveal-unknown",
+      "accept": false,
+      "why": "the same for what frost leaves sharp",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "schema": 3,
+        "effects": [
+          {
+            "kind": "frost",
+            "reveal": "ears"
+          }
+        ]
+      }
+    },
+    {
+      "id": "fx-frost-reveal-not-a-string",
+      "accept": false,
+      "why": "which must be a name, not a number",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "schema": 3,
+        "effects": [
+          {
+            "kind": "frost",
+            "reveal": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "fx-frost-blur-zero",
+      "accept": false,
+      "why": "a blur of zero is not frost, it is nothing -- and a lens that appears to do something and does not is worse than one that is refused",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "schema": 3,
+        "effects": [
+          {
+            "kind": "frost",
+            "blur": 0
+          }
+        ]
+      }
+    },
+    {
+      "id": "fx-frost-blur-negative",
+      "accept": false,
+      "why": "nor is a negative one",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "schema": 3,
+        "effects": [
+          {
+            "kind": "frost",
+            "blur": -0.2
+          }
+        ]
+      }
+    },
+    {
+      "id": "fx-frost-blur-absurd",
+      "accept": false,
+      "why": "blur is in pupil-gaps, so three of them is wider than the head",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "schema": 3,
+        "effects": [
+          {
+            "kind": "frost",
+            "blur": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "fx-frost-blur-overflows",
+      "accept": false,
+      "why": "a blur that is legal JSON and becomes infinity",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "schema": 3,
+        "effects": [
+          {
+            "kind": "frost",
+            "blur": 1e400
+          }
+        ]
+      }
+    },
+    {
+      "id": "fx-frost-lift-above-one",
+      "accept": false,
+      "why": "lift is a fraction of the way to white",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "schema": 3,
+        "effects": [
+          {
+            "kind": "frost",
+            "lift": 1.5
+          }
+        ]
+      }
+    },
+    {
+      "id": "fx-frost-desaturate-negative",
+      "accept": false,
+      "why": "and desaturation cannot run backwards",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "schema": 3,
+        "effects": [
+          {
+            "kind": "frost",
+            "desaturate": -0.1
+          }
+        ]
+      }
+    },
+    {
+      "id": "fx-fill-shading-above-one",
+      "accept": false,
+      "why": "keepShading is a fraction too",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "schema": 3,
+        "effects": [
+          {
+            "kind": "fill",
+            "region": "lowerFace",
+            "keepShading": 1.2
+          }
+        ]
+      }
+    },
+    {
+      "id": "fx-fill-feather-absurd",
+      "accept": false,
+      "why": "feather is in pupil-gaps, so three is a face and a half of blur",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "schema": 3,
+        "effects": [
+          {
+            "kind": "fill",
+            "region": "lowerFace",
+            "feather": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "fx-number-is-a-bool",
+      "accept": false,
+      "why": "true is not a number, whatever Python says about isinstance(True, int)",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "schema": 3,
+        "effects": [
+          {
+            "kind": "fill",
+            "region": "lowerFace",
+            "keepShading": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "fx-number-is-a-string",
+      "accept": false,
+      "why": "nor is a number written as text",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "schema": 3,
+        "effects": [
+          {
+            "kind": "frost",
+            "blur": "0.2"
+          }
+        ]
+      }
+    },
+    {
+      "id": "fx-effects-need-schema-3",
+      "accept": false,
+      "why": "a lens claiming schema 2 with effects is lying about what it needs to be drawn, and would come out as an ordinary photograph",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "schema": 2,
+        "effects": [
+          {
+            "kind": "frost"
+          }
+        ]
+      }
+    },
+    {
+      "id": "fx-effects-without-a-schema",
+      "accept": false,
+      "why": "and one that says nothing at all defaults to schema 1",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "effects": [
+          {
+            "kind": "frost"
+          }
+        ]
+      }
+    },
+    {
+      "id": "fx-schema-past-the-newest",
+      "accept": false,
+      "why": "schema 4 does not exist yet, so a lens written for it cannot be drawn here -- refused rather than half-drawn",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "schema": 4,
+        "effects": [
+          {
+            "kind": "frost"
+          }
+        ]
+      }
+    },
+    {
+      "id": "fx-effect-is-null",
+      "accept": false,
+      "why": "a null in the list is not an effect",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "schema": 3,
+        "effects": [
+          null
+        ]
+      }
+    },
+    {
+      "id": "fx-kind-not-a-string",
+      "accept": false,
+      "why": "nor is a kind written as a number",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "schema": 3,
+        "effects": [
+          {
+            "kind": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "fx-blur-at-the-limit",
+      "accept": true,
+      "why": "two pupil-gaps is the most, and the most is allowed",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "schema": 3,
+        "effects": [
+          {
+            "kind": "frost",
+            "blur": 2,
+            "feather": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "fx-shading-at-the-limits",
+      "accept": true,
+      "why": "so are both ends of a fraction",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "schema": 3,
+        "effects": [
+          {
+            "kind": "fill",
+            "region": "lowerFace",
+            "keepShading": 1
+          },
+          {
+            "kind": "frost",
+            "desaturate": 0,
+            "lift": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "fx-unknown-keys-are-ignored",
+      "accept": true,
+      "why": "a key neither side knows is skipped rather than refused: that is what the schema number is for, and a field added later must not make an older app throw the whole lens away",
+      "lens": {
+        "id": "fx",
+        "name": "Effect",
+        "schema": 3,
+        "effects": [
+          {
+            "kind": "frost",
+            "sparkle": true,
+            "tint": "#ff0000"
           }
         ]
       }
