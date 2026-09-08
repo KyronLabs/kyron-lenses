@@ -64,6 +64,10 @@ jobs:
           # Published so the app's CI can compare its vendored copy against
           # this one, and fail if the spec moved on without it.
           cp format-vectors.json site/
+          # The pictures schema-2 lenses hang on a face. Served from the same
+          # place as the catalogue that points at them, so a lens and its
+          # assets can never be published out of step.
+          cp -r assets site/
           # So a browser opening the URL sees something, and a person can tell
           # at a glance whether the published catalogue is the one they meant.
           python3 - <<'PY'

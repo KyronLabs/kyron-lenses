@@ -1,5 +1,5 @@
 {
-  "note": "One spec, two implementations. Lens.tryParse in the Kyron app and problems() in tools/lens.py must agree on every case here: a lens that passes the tool, gets published, and is then dropped by the app leaves its explanation in a log line on a stranger's phone. Both sides run these. Adding a rule means adding a case.",
+  "note": "One spec, two implementations. Lens.tryParse in the Kyron app and problems() in tools/lens.py must agree on every case here: a lens that passes the tool, gets published, and is then dropped by the app leaves its explanation in a log line on a stranger's phone. Both sides run these. Adding a rule means adding a case. Cases prefixed ar- cover schema 2: attachments hung on a tracked face.",
   "cases": [
     {
       "id": "minimal",
@@ -1077,6 +1077,520 @@
       "accept": false,
       "why": "null is not a lens",
       "lens": null
+    },
+    {
+      "id": "ar-minimal",
+      "accept": true,
+      "why": "an attachment needs a picture, an anchor and a width",
+      "lens": {
+        "id": "specs",
+        "name": "Specs",
+        "schema": 2,
+        "attachments": [
+          {
+            "asset": "https://cdn.example/glasses.png",
+            "anchor": "eyes",
+            "width": 2.6
+          }
+        ]
+      }
+    },
+    {
+      "id": "ar-every-anchor",
+      "accept": true,
+      "why": "all five places something can hang",
+      "lens": {
+        "id": "specs",
+        "name": "Specs",
+        "schema": 2,
+        "attachments": [
+          {
+            "asset": "https://cdn.example/glasses.png",
+            "anchor": "eyes",
+            "width": 2.6
+          },
+          {
+            "asset": "https://cdn.example/glasses.png",
+            "anchor": "nose",
+            "width": 2.6
+          },
+          {
+            "asset": "https://cdn.example/glasses.png",
+            "anchor": "mouth",
+            "width": 2.6
+          },
+          {
+            "asset": "https://cdn.example/glasses.png",
+            "anchor": "forehead",
+            "width": 2.6
+          },
+          {
+            "asset": "https://cdn.example/glasses.png",
+            "anchor": "chin",
+            "width": 2.6
+          }
+        ]
+      }
+    },
+    {
+      "id": "ar-nudged-and-turned",
+      "accept": true,
+      "why": "offsets are in pupil-gaps and rotation in degrees, both optional",
+      "lens": {
+        "id": "specs",
+        "name": "Specs",
+        "schema": 2,
+        "attachments": [
+          {
+            "asset": "https://cdn.example/glasses.png",
+            "anchor": "eyes",
+            "width": 2.6,
+            "offsetX": 0.2,
+            "offsetY": -1.1,
+            "rotation": -12
+          }
+        ]
+      }
+    },
+    {
+      "id": "ar-tint-and-attach",
+      "accept": true,
+      "why": "a lens may do both: tint the picture and put glasses on",
+      "lens": {
+        "id": "specs",
+        "name": "Specs",
+        "schema": 2,
+        "attachments": [
+          {
+            "asset": "https://cdn.example/glasses.png",
+            "anchor": "eyes",
+            "width": 2.6
+          }
+        ],
+        "matrix": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      }
+    },
+    {
+      "id": "ar-width-at-limit",
+      "accept": true,
+      "why": "exactly on the boundary is inside it",
+      "lens": {
+        "id": "specs",
+        "name": "Specs",
+        "schema": 2,
+        "attachments": [
+          {
+            "asset": "https://cdn.example/glasses.png",
+            "anchor": "eyes",
+            "width": 12.0
+          }
+        ]
+      }
+    },
+    {
+      "id": "ar-empty-attachment-list",
+      "accept": true,
+      "why": "an empty list is a colour lens that says so verbosely, not an error",
+      "lens": {
+        "id": "plain",
+        "name": "Plain",
+        "matrix": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "attachments": []
+      }
+    },
+    {
+      "id": "ar-attachments-claiming-schema-1",
+      "accept": false,
+      "why": "a lens with attachments claiming schema 1 is lying about what it needs; an older build would read it as the do-nothing lens and show a chip that does nothing",
+      "lens": {
+        "id": "specs",
+        "name": "Specs",
+        "attachments": [
+          {
+            "asset": "https://cdn.example/glasses.png",
+            "anchor": "eyes",
+            "width": 2.6
+          }
+        ]
+      }
+    },
+    {
+      "id": "ar-schema-from-the-future",
+      "accept": false,
+      "why": "an unknown schema is dropped rather than half-drawn",
+      "lens": {
+        "id": "specs",
+        "name": "Specs",
+        "schema": 99
+      }
+    },
+    {
+      "id": "ar-schema-zero",
+      "accept": false,
+      "why": "schemas start at 1",
+      "lens": {
+        "id": "specs",
+        "name": "Specs",
+        "schema": 0
+      }
+    },
+    {
+      "id": "ar-schema-not-an-integer",
+      "accept": false,
+      "why": "nor is it a string",
+      "lens": {
+        "id": "specs",
+        "name": "Specs",
+        "schema": "2"
+      }
+    },
+    {
+      "id": "ar-asset-plain-http",
+      "accept": false,
+      "why": "a lens is data the app fetches; http in a published catalogue is a mistake or somebody testing what it will load",
+      "lens": {
+        "id": "specs",
+        "name": "Specs",
+        "schema": 2,
+        "attachments": [
+          {
+            "asset": "http://cdn.example/g.png",
+            "anchor": "eyes",
+            "width": 2.6
+          }
+        ]
+      }
+    },
+    {
+      "id": "ar-asset-file-url",
+      "accept": false,
+      "why": "and file:// is not a mistake",
+      "lens": {
+        "id": "specs",
+        "name": "Specs",
+        "schema": 2,
+        "attachments": [
+          {
+            "asset": "file:///etc/passwd",
+            "anchor": "eyes",
+            "width": 2.6
+          }
+        ]
+      }
+    },
+    {
+      "id": "ar-asset-data-url",
+      "accept": false,
+      "why": "nor is an inline payload",
+      "lens": {
+        "id": "specs",
+        "name": "Specs",
+        "schema": 2,
+        "attachments": [
+          {
+            "asset": "data:image/png;base64,AAAA",
+            "anchor": "eyes",
+            "width": 2.6
+          }
+        ]
+      }
+    },
+    {
+      "id": "ar-asset-protocol-relative",
+      "accept": false,
+      "why": "// inherits whatever scheme it lands in",
+      "lens": {
+        "id": "specs",
+        "name": "Specs",
+        "schema": 2,
+        "attachments": [
+          {
+            "asset": "//cdn.example/g.png",
+            "anchor": "eyes",
+            "width": 2.6
+          }
+        ]
+      }
+    },
+    {
+      "id": "ar-asset-missing",
+      "accept": false,
+      "why": "an attachment with no picture draws nothing",
+      "lens": {
+        "id": "specs",
+        "name": "Specs",
+        "schema": 2,
+        "attachments": [
+          {
+            "asset": null,
+            "anchor": "eyes",
+            "width": 2.6
+          }
+        ]
+      }
+    },
+    {
+      "id": "ar-anchor-unknown",
+      "accept": false,
+      "why": "quietly defaulting to the eyes would put a hat over somebody's face",
+      "lens": {
+        "id": "specs",
+        "name": "Specs",
+        "schema": 2,
+        "attachments": [
+          {
+            "asset": "https://cdn.example/glasses.png",
+            "anchor": "elbow",
+            "width": 2.6
+          }
+        ]
+      }
+    },
+    {
+      "id": "ar-anchor-wrong-case",
+      "accept": false,
+      "why": "anchors are lowercase, like ids",
+      "lens": {
+        "id": "specs",
+        "name": "Specs",
+        "schema": 2,
+        "attachments": [
+          {
+            "asset": "https://cdn.example/glasses.png",
+            "anchor": "Eyes",
+            "width": 2.6
+          }
+        ]
+      }
+    },
+    {
+      "id": "ar-width-zero",
+      "accept": false,
+      "why": "a width of zero is an attachment nobody can see",
+      "lens": {
+        "id": "specs",
+        "name": "Specs",
+        "schema": 2,
+        "attachments": [
+          {
+            "asset": "https://cdn.example/glasses.png",
+            "anchor": "eyes",
+            "width": 0
+          }
+        ]
+      }
+    },
+    {
+      "id": "ar-width-negative",
+      "accept": false,
+      "why": "nor is a negative one",
+      "lens": {
+        "id": "specs",
+        "name": "Specs",
+        "schema": 2,
+        "attachments": [
+          {
+            "asset": "https://cdn.example/glasses.png",
+            "anchor": "eyes",
+            "width": -2
+          }
+        ]
+      }
+    },
+    {
+      "id": "ar-width-absurd",
+      "accept": false,
+      "why": "measured in pupil-gaps, so 1000 is an attachment the size of the county",
+      "lens": {
+        "id": "specs",
+        "name": "Specs",
+        "schema": 2,
+        "attachments": [
+          {
+            "asset": "https://cdn.example/glasses.png",
+            "anchor": "eyes",
+            "width": 1000
+          }
+        ]
+      }
+    },
+    {
+      "id": "ar-width-overflows",
+      "accept": false,
+      "why": "a width that is legal JSON and becomes infinity",
+      "lens": {
+        "id": "specs",
+        "name": "Specs",
+        "schema": 2,
+        "attachments": [
+          {
+            "asset": "https://cdn.example/glasses.png",
+            "anchor": "eyes",
+            "width": 1e400
+          }
+        ]
+      }
+    },
+    {
+      "id": "ar-offset-absurd",
+      "accept": false,
+      "why": "offsets are bounded for the same reason",
+      "lens": {
+        "id": "specs",
+        "name": "Specs",
+        "schema": 2,
+        "attachments": [
+          {
+            "asset": "https://cdn.example/glasses.png",
+            "anchor": "eyes",
+            "width": 2.6,
+            "offsetX": 99
+          }
+        ]
+      }
+    },
+    {
+      "id": "ar-rotation-absurd",
+      "accept": false,
+      "why": "a full turn is 360 degrees",
+      "lens": {
+        "id": "specs",
+        "name": "Specs",
+        "schema": 2,
+        "attachments": [
+          {
+            "asset": "https://cdn.example/glasses.png",
+            "anchor": "eyes",
+            "width": 2.6,
+            "rotation": 400
+          }
+        ]
+      }
+    },
+    {
+      "id": "ar-attachments-not-a-list",
+      "accept": false,
+      "why": "attachments is a list",
+      "lens": {
+        "id": "specs",
+        "name": "Specs",
+        "schema": 2,
+        "attachments": {
+          "asset": "https://cdn.example/glasses.png"
+        }
+      }
+    },
+    {
+      "id": "ar-attachment-not-an-object",
+      "accept": false,
+      "why": "each one is an object",
+      "lens": {
+        "id": "specs",
+        "name": "Specs",
+        "schema": 2,
+        "attachments": [
+          "glasses.png"
+        ]
+      }
+    },
+    {
+      "id": "ar-too-many-attachments",
+      "accept": false,
+      "why": "eight is already more than anybody puts on one face",
+      "lens": {
+        "id": "specs",
+        "name": "Specs",
+        "schema": 2,
+        "attachments": [
+          {
+            "asset": "https://cdn.example/glasses.png",
+            "anchor": "eyes",
+            "width": 2.6
+          },
+          {
+            "asset": "https://cdn.example/glasses.png",
+            "anchor": "eyes",
+            "width": 2.6
+          },
+          {
+            "asset": "https://cdn.example/glasses.png",
+            "anchor": "eyes",
+            "width": 2.6
+          },
+          {
+            "asset": "https://cdn.example/glasses.png",
+            "anchor": "eyes",
+            "width": 2.6
+          },
+          {
+            "asset": "https://cdn.example/glasses.png",
+            "anchor": "eyes",
+            "width": 2.6
+          },
+          {
+            "asset": "https://cdn.example/glasses.png",
+            "anchor": "eyes",
+            "width": 2.6
+          },
+          {
+            "asset": "https://cdn.example/glasses.png",
+            "anchor": "eyes",
+            "width": 2.6
+          },
+          {
+            "asset": "https://cdn.example/glasses.png",
+            "anchor": "eyes",
+            "width": 2.6
+          },
+          {
+            "asset": "https://cdn.example/glasses.png",
+            "anchor": "eyes",
+            "width": 2.6
+          }
+        ]
+      }
     }
   ]
 }

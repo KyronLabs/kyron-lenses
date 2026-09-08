@@ -56,6 +56,61 @@ an attack.
 A lens that breaks any of these is **dropped**, and the app logs that it was.
 The rest of the catalogue still loads: one typo costs one lens.
 
+## Schema 2: something on a face
+
+A lens may also hang pictures on a tracked face.
+
+```json
+{
+  "id": "specs",
+  "name": "Specs",
+  "schema": 2,
+  "attachments": [
+    {
+      "asset": "https://kyronlabs.github.io/kyron-lenses/assets/glasses.png",
+      "anchor": "eyes",
+      "width": 2.6
+    }
+  ]
+}
+```
+
+| Field | Rules |
+|:--|:--|
+| `asset` | Required. **HTTPS only**, at most 500 characters. A lens is data the app fetches; `http://`, `file://` and `data:` in a published catalogue are a mistake or somebody testing what it will load. |
+| `anchor` | Required. `eyes`, `nose`, `mouth`, `forehead` or `chin`. Lowercase, like an id. |
+| `width` | Required. **In pupil-gaps**, not pixels — see below. Above 0, at most 12. |
+| `offsetX`, `offsetY` | Optional, also in pupil-gaps, within ±8. Rotated with the head, so a hat pushed "up" stays up when somebody leans. |
+| `rotation` | Optional degrees within ±360, on top of the head's own tilt. |
+
+At most 8 attachments. **A lens with attachments must declare `"schema": 2`** —
+without it an older build reads a lens with no matrix as the do-nothing lens
+and shows a chip that is there and does nothing, which is worse than a chip
+that is not there. Unknown schemas are dropped for the same reason.
+
+### Width is measured in faces
+
+`2.6` means *2.6 times the distance between the pupils*. Not pixels, not a
+fraction of the frame.
+
+That distance is the one measurement that keeps meaning the same thing as a
+head turns — both irises stay visible well past the angle at which a jaw
+outline stops describing anything. Measured across a 60° sweep of roll it
+moved 1.6%, while the box around the face changed shape entirely. So a width
+stated this way is correct at any distance from the camera, on any face, at
+any resolution, with nothing to tune per device.
+
+### Still no code
+
+An attachment is a picture, a place and a size. There is nothing to execute,
+which is the whole reason a lens can be downloaded and pointed at somebody's
+camera. A lens that could run a script would end that, and a script is exactly
+what a Lens Studio lens contains. See [AR_LENSES.md](AR_LENSES.md).
+
+An image is not *nothing*, though: it is a decoder's worth of attack surface,
+which the colour matrices were not. Hence HTTPS, hence the 4 MB ceiling the
+app applies when fetching one.
+
 ## The catalogue
 
 ```json
@@ -159,10 +214,11 @@ Worth saying plainly, because "AR lens" suggests more:
 
 - **No blur, warp, or anything spatial.** A colour matrix reads one pixel and
   writes one pixel; it cannot see a neighbour. Those need a fragment shader.
-- **No tracking.** Nothing detects a face or a plane, so no lens can put a hat
-  on anybody.
-- **No animation.** A lens is a constant, not a function of time.
-- **No per-lens assets.** No overlays, frames or textures.
+- **No animation.** A lens is a constant, not a function of time. Nothing
+  responds to an expression yet, though the tracker reports 52 of them.
+- **No 3D.** An attachment is a flat picture. A head turning to the side is
+  where that stops being convincing, and it is the next thing to build.
+- **No occlusion.** Glasses arms draw over the head rather than behind it.
 
 Any of those would mean a new `schema` and a real look at what it means to
 download one. See [AR.md](https://github.com/KyronLabs/kyron/blob/main/docs/AR.md) in the

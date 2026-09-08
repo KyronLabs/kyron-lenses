@@ -31,6 +31,74 @@ MAX_COEFFICIENT = 8.0
 MAX_OFFSET = 255.0
 ID = re.compile(r'^[a-z0-9][a-z0-9_-]*$')
 
+# The newest lens shape. 1: a colour matrix. 2: attachments on a tracked face.
+# Kept in step with Lens.supportedSchema in the app -- format-vectors.json is
+# what stops the two drifting.
+SUPPORTED_SCHEMA = 2
+ANCHORS = ('eyes', 'nose', 'mouth', 'forehead', 'chin')
+MAX_ATTACHMENTS = 8
+MAX_ATTACHMENT_WIDTH = 12.0
+MAX_ATTACHMENT_OFFSET = 8.0
+
+
+def attachment_problems(item, where):
+    """Everything wrong with one attachment.
+
+    Same rules as LensAttachment.tryParse in the app.
+    """
+    found = []
+    if not isinstance(item, dict):
+        return [f'{where}: not an object']
+
+    asset = item.get('asset')
+    # HTTPS only. A lens is data the app fetches, and anything else in a
+    # published catalogue is a mistake or somebody testing what it will load.
+    if not isinstance(asset, str) or not asset.startswith('https://'):
+        found.append(f'{where}: asset must be an https:// URL, got {asset!r}')
+    elif len(asset) > 500:
+        found.append(f'{where}: asset URL is over 500 characters')
+
+    anchor = item.get('anchor')
+    if anchor not in ANCHORS:
+        found.append(
+            f'{where}: anchor {anchor!r} must be one of {", ".join(ANCHORS)}'
+        )
+
+    width = item.get('width')
+    if not _is_number(width):
+        found.append(f'{where}: width {width!r} is not a number')
+    elif not 0 < width <= MAX_ATTACHMENT_WIDTH:
+        found.append(
+            f'{where}: width {width} must be above 0 and at most '
+            f'{MAX_ATTACHMENT_WIDTH} (multiples of the interpupillary distance)'
+        )
+
+    for axis in ('offsetX', 'offsetY'):
+        value = item.get(axis, 0)
+        if not _is_number(value):
+            found.append(f'{where}: {axis} {value!r} is not a number')
+        elif abs(value) > MAX_ATTACHMENT_OFFSET:
+            found.append(
+                f'{where}: {axis} {value} is outside '
+                f'+/-{MAX_ATTACHMENT_OFFSET}'
+            )
+
+    rotation = item.get('rotation', 0)
+    if not _is_number(rotation):
+        found.append(f'{where}: rotation {rotation!r} is not a number')
+    elif abs(rotation) > 360:
+        found.append(f'{where}: rotation {rotation} is outside +/-360')
+
+    return found
+
+
+def _is_number(value):
+    """A real, finite number. Booleans are not numbers, whatever Python says
+    about isinstance(True, int)."""
+    if not isinstance(value, (int, float)) or isinstance(value, bool):
+        return False
+    return value == value and value not in (float('inf'), float('-inf'))
+
 
 def apply_matrix(image, matrix):
     """One lens over one image.
@@ -73,9 +141,32 @@ def problems(lens):
     if author is not None and (not isinstance(author, str) or len(author) > 80):
         found.append('author must be a string of at most 80 characters')
 
+    schema = lens.get('schema', 1)
+    if not isinstance(schema, int) or isinstance(schema, bool) or \
+            not 1 <= schema <= SUPPORTED_SCHEMA:
+        found.append(
+            f'schema {schema!r} must be an integer from 1 to {SUPPORTED_SCHEMA}'
+        )
+        schema = 1
+
+    attachments = lens.get('attachments')
+    if attachments is not None:
+        if not isinstance(attachments, list):
+            found.append('attachments must be a list')
+        elif len(attachments) > MAX_ATTACHMENTS:
+            found.append(f'at most {MAX_ATTACHMENTS} attachments')
+        else:
+            for index, item in enumerate(attachments):
+                found.extend(attachment_problems(item, f'attachment {index}'))
+            if attachments and schema < 2:
+                found.append(
+                    'attachments need schema 2; a lens claiming schema 1 with '
+                    'attachments is lying about what it needs to be drawn'
+                )
+
     matrix = lens.get('matrix')
     if matrix is None:
-        return found  # The identity lens. Legal.
+        return found  # The identity lens, or an attachments-only lens.
 
     if not isinstance(matrix, list) or len(matrix) != MATRIX_LENGTH:
         found.append(
@@ -87,10 +178,11 @@ def problems(lens):
     for i, value in enumerate(matrix):
         row, col = divmod(i, 5)
         where = f'row {row}, {"offset" if col == 4 else "column " + str(col)}'
-        if not isinstance(value, (int, float)) or isinstance(value, bool):
-            found.append(f'{where}: {value!r} is not a number')
-        elif value != value or value in (float('inf'), float('-inf')):
-            found.append(f'{where}: NaN and infinity poison every pixel')
+        if not _is_number(value):
+            found.append(
+                f'{where}: {value!r} is not a usable number '
+                '(NaN and infinity poison every pixel)'
+            )
         else:
             limit = MAX_OFFSET if col == 4 else MAX_COEFFICIENT
             if abs(value) > limit:
@@ -146,6 +238,11 @@ def cmd_preview(args):
     tiles = [('original', photo)]
     for lens in lenses:
         matrix = lens.get('matrix')
+        if lens.get('attachments') and matrix is None:
+            # A face lens has nothing to show on a photograph with no face in
+            # it. Saying so beats an unchanged tile that reads as a bug.
+            tiles.append((f'{lens["name"]} (face lens)', photo))
+            continue
         tiles.append((
             lens['name'],
             photo if matrix is None else apply_matrix(photo, matrix),

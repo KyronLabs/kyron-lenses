@@ -27,6 +27,19 @@
         1,
         0
       ]
+    },
+    {
+      "id": "specs",
+      "name": "Specs",
+      "schema": 2,
+      "author": "Kyron",
+      "attachments": [
+        {
+          "asset": "https://kyronlabs.github.io/kyron-lenses/assets/glasses.png",
+          "anchor": "eyes",
+          "width": 2.6
+        }
+      ]
     }
   ]
 }
