@@ -8,11 +8,20 @@ it up.
 
 | | |
 |:--|:--|
-| `lenses.json` | The catalogue. Source of truth. |
+| `lenses.json` | The catalogue: lenses the app does **not** already bundle. |
 | `tools/lens.py` | Check a catalogue, and see what it looks like. |
 | `tools/flutter-probe.json` | Real output captured from Flutter, so the tool can prove it renders identically. |
 | `sample.png` | A colour chart: skin tones, nature, primaries, a step wedge and a ramp. |
 | `docs/FORMAT.md` | The format, the rules, and what it deliberately cannot do. |
+
+## This is what the app adds, not everything it has
+
+Seven lenses ship inside the app — None, Mono, Warm, Cool, Faded, Punch, Noir.
+They are not listed here, deliberately: the app always prefers its own copy, so
+repeating them would be inert duplication that could quietly diverge from what
+the camera actually renders.
+
+`lenses.json` is what gets added on top.
 
 ## A lens is twenty numbers
 
