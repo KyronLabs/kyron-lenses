@@ -12,6 +12,7 @@ see docs/LENS_FORMAT.md.
     lens.py preview  <catalogue.json> <photo.jpg> [-o sheet.png]
     lens.py check    <catalogue.json>
     lens.py verify   <probe.json>
+    lens.py vectors  [format-vectors.json]
 
 `preview` writes a contact sheet: the original, then every lens, labelled. It
 is the whole point of this file -- tuning twenty numbers without seeing them
@@ -175,6 +176,37 @@ def cmd_preview(args):
     return 0
 
 
+def cmd_vectors(args):
+    """Runs the shared spec against this implementation.
+
+    The same file runs against Lens.tryParse in the app. It is the only thing
+    keeping two implementations of one set of rules honest -- without it, a
+    rule tightened here and not there means a lens passes `check`, gets
+    published, and silently never appears on anybody's phone.
+    """
+    with open(args.vectors) as handle:
+        spec = json.load(handle)
+
+    failures = 0
+    for case in spec['cases']:
+        found = problems(case['lens'])
+        accepted = not found
+        if accepted != case['accept']:
+            failures += 1
+            wanted = 'accepted' if case['accept'] else 'rejected'
+            print(f'FAIL {case["id"]}: should be {wanted}')
+            print(f'       {case["why"]}')
+            if found:
+                for problem in found:
+                    print(f'       got: {problem}')
+            else:
+                print('       got: accepted with no complaint')
+
+    total = len(spec['cases'])
+    print(f'{total - failures}/{total} vectors agree with this implementation')
+    return 1 if failures else 0
+
+
 def cmd_verify(args):
     """Checks this file against values captured from Flutter itself."""
     with open(args.probe) as handle:
@@ -215,6 +247,10 @@ def main():
     verify = sub.add_parser('verify', help='check against captured Flutter output')
     verify.add_argument('probe')
     verify.set_defaults(run=cmd_verify)
+
+    vectors = sub.add_parser('vectors', help='run the shared format spec')
+    vectors.add_argument('vectors', nargs='?', default='format-vectors.json')
+    vectors.set_defaults(run=cmd_vectors)
 
     args = parser.parse_args()
     sys.exit(args.run(args))

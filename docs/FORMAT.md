@@ -99,7 +99,23 @@ python3 tools/lens.py preview lenses.json sample.png -o sheet.png
 
 `check` applies **the same rules as `Lens.tryParse`** in the app. If the two
 ever disagree, a lens passes locally and vanishes on the phone with nothing
-saying why — so when you change one, change the other.
+saying why.
+
+`format-vectors.json` is what stops that being a matter of memory. Forty
+cases — nine that must be accepted, thirty-one that must be refused — run by
+both implementations:
+
+```
+python3 tools/lens.py vectors format-vectors.json
+```
+
+It is canonical here and vendored into the app, whose CI compares its copy
+against the published one and fails if the spec moved on without it. **Adding
+a rule means adding a case**, in the same commit.
+
+One thing the file cannot cover: NaN. JSON has no way to write it, so each
+side tests that in its own unit tests. What JSON *can* carry is `1e400`, which
+overflows to infinity in both languages, and that is a case here.
 
 ### The preview does not lie
 

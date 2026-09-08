@@ -1,0 +1,1082 @@
+{
+  "note": "One spec, two implementations. Lens.tryParse in the Kyron app and problems() in tools/lens.py must agree on every case here: a lens that passes the tool, gets published, and is then dropped by the app leaves its explanation in a log line on a stranger's phone. Both sides run these. Adding a rule means adding a case.",
+  "cases": [
+    {
+      "id": "minimal",
+      "accept": true,
+      "why": "id, name and twenty numbers is all a lens needs",
+      "lens": {
+        "id": "plain",
+        "name": "Plain",
+        "matrix": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      }
+    },
+    {
+      "id": "identity-no-matrix",
+      "accept": true,
+      "why": "the lens that changes nothing carries no matrix, and is still a lens",
+      "lens": {
+        "id": "none",
+        "name": "None"
+      }
+    },
+    {
+      "id": "with-author",
+      "accept": true,
+      "why": "author is optional and free text",
+      "lens": {
+        "id": "someone",
+        "name": "Someone's",
+        "author": "A Person",
+        "matrix": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      }
+    },
+    {
+      "id": "real-lens-punch",
+      "accept": true,
+      "why": "the most aggressive bundled lens; its 1.47 must stay inside the limits",
+      "lens": {
+        "id": "punch",
+        "name": "Punch",
+        "matrix": [
+          1.45,
+          -0.32,
+          -0.13,
+          0,
+          -8,
+          -0.15,
+          1.28,
+          -0.13,
+          0,
+          -8,
+          -0.15,
+          -0.32,
+          1.47,
+          0,
+          -8,
+          0,
+          0,
+          0,
+          1,
+          0
+        ]
+      }
+    },
+    {
+      "id": "integers-not-just-doubles",
+      "accept": true,
+      "why": "JSON integers are numbers too; a matrix of whole numbers is legal",
+      "lens": {
+        "id": "ints",
+        "name": "Ints",
+        "matrix": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ]
+      }
+    },
+    {
+      "id": "offset-at-full-range",
+      "accept": true,
+      "why": "every fifth value is an offset in 0-255, held to a different limit",
+      "lens": {
+        "id": "lifted",
+        "name": "Lifted",
+        "matrix": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          255,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          -255,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      }
+    },
+    {
+      "id": "coefficient-at-limit",
+      "accept": true,
+      "why": "exactly on the boundary is inside it",
+      "lens": {
+        "id": "edge",
+        "name": "Edge",
+        "matrix": [
+          8.0,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          -8.0,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      }
+    },
+    {
+      "id": "id-with-digits-and-marks",
+      "accept": true,
+      "why": "digits, hyphen and underscore are allowed",
+      "lens": {
+        "id": "lens_02-b",
+        "name": "Lens 2b",
+        "matrix": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      }
+    },
+    {
+      "id": "name-at-max",
+      "accept": true,
+      "why": "forty characters is the ceiling, not past it",
+      "lens": {
+        "id": "long",
+        "name": "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+        "matrix": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      }
+    },
+    {
+      "id": "matrix-too-short",
+      "accept": false,
+      "why": "nineteen numbers is not a lens missing one, it is a file to distrust",
+      "lens": {
+        "id": "short",
+        "name": "Short",
+        "matrix": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      }
+    },
+    {
+      "id": "matrix-too-long",
+      "accept": false,
+      "why": "twenty-one is equally not a colour matrix",
+      "lens": {
+        "id": "long",
+        "name": "Long",
+        "matrix": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      }
+    },
+    {
+      "id": "matrix-empty",
+      "accept": false,
+      "why": "an empty list is not an identity lens",
+      "lens": {
+        "id": "empty",
+        "name": "Empty",
+        "matrix": []
+      }
+    },
+    {
+      "id": "matrix-not-a-list",
+      "accept": false,
+      "why": "a string is not a matrix however it is spelled",
+      "lens": {
+        "id": "str",
+        "name": "Str",
+        "matrix": "0.5,0.5"
+      }
+    },
+    {
+      "id": "matrix-holds-a-string",
+      "accept": false,
+      "why": "one quoted number poisons the whole matrix",
+      "lens": {
+        "id": "quoted",
+        "name": "Quoted",
+        "matrix": [
+          "0.5",
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      }
+    },
+    {
+      "id": "matrix-holds-a-bool",
+      "accept": false,
+      "why": "true is not 1. Python's isinstance(True, int) says otherwise, so this case exists to keep that from mattering",
+      "lens": {
+        "id": "boolean",
+        "name": "Boolean",
+        "matrix": [
+          true,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      }
+    },
+    {
+      "id": "matrix-holds-null",
+      "accept": false,
+      "why": "a missing value is not zero",
+      "lens": {
+        "id": "nulled",
+        "name": "Nulled",
+        "matrix": [
+          null,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      }
+    },
+    {
+      "id": "coefficient-too-large",
+      "accept": false,
+      "why": "past the limit is nonsense: a bug, a truncated file, or somebody poking",
+      "lens": {
+        "id": "wild",
+        "name": "Wild",
+        "matrix": [
+          1000,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      }
+    },
+    {
+      "id": "coefficient-too-negative",
+      "accept": false,
+      "why": "the limit is on the magnitude",
+      "lens": {
+        "id": "wildneg",
+        "name": "Wild",
+        "matrix": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          -1000,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      }
+    },
+    {
+      "id": "offset-too-large",
+      "accept": false,
+      "why": "offsets are wider than coefficients, not unbounded",
+      "lens": {
+        "id": "offset",
+        "name": "Offset",
+        "matrix": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          4000,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      }
+    },
+    {
+      "id": "coefficient-uses-offset-limit",
+      "accept": false,
+      "why": "a coefficient of 100 would pass if the offset limit were applied to it; this catches getting the row/column arithmetic wrong",
+      "lens": {
+        "id": "confused",
+        "name": "Confused",
+        "matrix": [
+          0.5,
+          0.5,
+          0.5,
+          100,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      }
+    },
+    {
+      "id": "overflows-to-infinity",
+      "accept": false,
+      "why": "1e400 is legal JSON and becomes infinity in both languages; infinity poisons every pixel it touches. NaN cannot be written in JSON at all, so it is covered by each side's own unit tests rather than here",
+      "lens": {
+        "id": "inf",
+        "name": "Inf",
+        "matrix": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          1e400,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      }
+    },
+    {
+      "id": "id-missing",
+      "accept": false,
+      "why": "no id, no lens",
+      "lens": {
+        "name": "Nameless",
+        "matrix": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      }
+    },
+    {
+      "id": "id-empty",
+      "accept": false,
+      "why": "an empty id is not an id",
+      "lens": {
+        "id": "",
+        "name": "X",
+        "matrix": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      }
+    },
+    {
+      "id": "id-uppercase",
+      "accept": false,
+      "why": "ids are lowercase so two do not differ by case alone",
+      "lens": {
+        "id": "Mono",
+        "name": "Mono",
+        "matrix": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      }
+    },
+    {
+      "id": "id-with-space",
+      "accept": false,
+      "why": "an id is a key, not a label",
+      "lens": {
+        "id": "my lens",
+        "name": "My Lens",
+        "matrix": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      }
+    },
+    {
+      "id": "id-looks-like-a-path",
+      "accept": false,
+      "why": "ids reach a cache filename; this must never look like a path",
+      "lens": {
+        "id": "../../etc/passwd",
+        "name": "Bad",
+        "matrix": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      }
+    },
+    {
+      "id": "id-leading-hyphen",
+      "accept": false,
+      "why": "must start with a letter or digit",
+      "lens": {
+        "id": "-lead",
+        "name": "Lead",
+        "matrix": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      }
+    },
+    {
+      "id": "id-too-long",
+      "accept": false,
+      "why": "forty characters is the ceiling",
+      "lens": {
+        "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "name": "Long",
+        "matrix": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      }
+    },
+    {
+      "id": "id-not-a-string",
+      "accept": false,
+      "why": "a number is not an id",
+      "lens": {
+        "id": 7,
+        "name": "Seven",
+        "matrix": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      }
+    },
+    {
+      "id": "name-missing",
+      "accept": false,
+      "why": "the chip has to say something",
+      "lens": {
+        "id": "x",
+        "matrix": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      }
+    },
+    {
+      "id": "name-empty",
+      "accept": false,
+      "why": "an empty chip is not a lens",
+      "lens": {
+        "id": "x",
+        "name": "",
+        "matrix": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      }
+    },
+    {
+      "id": "name-only-whitespace",
+      "accept": false,
+      "why": "nor is a chip of spaces",
+      "lens": {
+        "id": "x",
+        "name": "   ",
+        "matrix": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      }
+    },
+    {
+      "id": "name-too-long",
+      "accept": false,
+      "why": "forty-one characters is past the ceiling",
+      "lens": {
+        "id": "x",
+        "name": "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+        "matrix": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      }
+    },
+    {
+      "id": "name-not-a-string",
+      "accept": false,
+      "why": "a number is not a name",
+      "lens": {
+        "id": "x",
+        "name": 5,
+        "matrix": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      }
+    },
+    {
+      "id": "author-not-a-string",
+      "accept": false,
+      "why": "optional does not mean any type",
+      "lens": {
+        "id": "x",
+        "name": "X",
+        "author": 5,
+        "matrix": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      }
+    },
+    {
+      "id": "author-too-long",
+      "accept": false,
+      "why": "eighty characters is the ceiling",
+      "lens": {
+        "id": "x",
+        "name": "X",
+        "author": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "matrix": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      }
+    },
+    {
+      "id": "not-an-object-list",
+      "accept": false,
+      "why": "a list is not a lens",
+      "lens": []
+    },
+    {
+      "id": "not-an-object-string",
+      "accept": false,
+      "why": "a string is not a lens",
+      "lens": "mono"
+    },
+    {
+      "id": "not-an-object-number",
+      "accept": false,
+      "why": "a number is not a lens",
+      "lens": 42
+    },
+    {
+      "id": "not-an-object-null",
+      "accept": false,
+      "why": "null is not a lens",
+      "lens": null
+    }
+  ]
+}

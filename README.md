@@ -12,6 +12,7 @@ it up.
 | `tools/lens.py` | Check a catalogue, and see what it looks like. |
 | `tools/flutter-probe.json` | Real output captured from Flutter, so the tool can prove it renders identically. |
 | `sample.png` | A colour chart: skin tones, nature, primaries, a step wedge and a ramp. |
+| `format-vectors.json` | The spec, as cases. **The app runs this exact file too.** |
 | `docs/FORMAT.md` | The format, the rules, and what it deliberately cannot do. |
 
 ## This is what the app adds, not everything it has
@@ -50,6 +51,23 @@ python3 tools/lens.py preview lenses.json sample.png -o sheet.png
 Then open a pull request. CI runs both of those and **attaches the rendered
 contact sheet to the run**, so whoever reviews it sees the lens rather than
 twenty numbers.
+
+### Two implementations, one spec
+
+`problems()` here and `Lens.tryParse` in the app apply the same rules in
+different languages. Nothing about being in separate repositories makes them
+agree, and the failure when they stop is quiet: a lens passes `check`, gets
+published, and is then dropped by the app.
+
+`format-vectors.json` is what keeps them honest -- 40 cases, 9 accepted and 31
+refused, run by both sides. It is canonical here and vendored into the app,
+whose CI fails if the two copies differ.
+
+**Adding a rule means adding a case.**
+
+```
+python3 tools/lens.py vectors format-vectors.json
+```
 
 ### The preview does not lie
 

@@ -35,6 +35,13 @@ jobs:
       - name: The preview still renders exactly like Flutter
         run: python3 tools/lens.py verify tools/flutter-probe.json
 
+      # One spec, two implementations. The app runs this same file against
+      # Lens.tryParse; if the two ever disagree, a lens passes here, gets
+      # published, and is then dropped by the app -- leaving its explanation
+      # in a log line on a stranger's phone.
+      - name: This implementation agrees with the shared format spec
+        run: python3 tools/lens.py vectors format-vectors.json
+
       - name: Render every lens
         run: python3 tools/lens.py preview lenses.json sample.png -o contact-sheet.png --columns 3 --size 300
 
@@ -54,6 +61,9 @@ jobs:
           mkdir -p site
           cp lenses.json site/
           cp contact-sheet.png site/
+          # Published so the app's CI can compare its vendored copy against
+          # this one, and fail if the spec moved on without it.
+          cp format-vectors.json site/
           # So a browser opening the URL sees something, and a person can tell
           # at a glance whether the published catalogue is the one they meant.
           python3 - <<'PY'
