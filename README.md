@@ -14,6 +14,8 @@ it up.
 | `sample.png` | A colour chart: skin tones, nature, primaries, a step wedge and a ramp. |
 | `format-vectors.json` | The spec, as cases. **The app runs this exact file too.** |
 | `docs/FORMAT.md` | The format, the rules, and what it deliberately cannot do. |
+| `docs/AR_LENSES.md` | Where this goes next: lenses attached to a face, and the decisions that come first. |
+| `tools/face.py` | Face tracking on the desktop, so AR placement can be checked without a phone. |
 
 ## This is what the app adds, not everything it has
 

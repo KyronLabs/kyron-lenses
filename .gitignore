@@ -3,3 +3,11 @@ site/
 contact-sheet.png
 lens-sheet.png
 __pycache__/
+
+# The MediaPipe model tools/face.py needs. 3.7MB, fetched rather than
+# committed -- the URL is in the tool's docstring.
+face_landmarker.task
+detection.json
+placed.png
+rolls.png
+landmarks.png
