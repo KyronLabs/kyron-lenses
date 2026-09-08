@@ -184,8 +184,23 @@ def cmd_vectors(args):
     rule tightened here and not there means a lens passes `check`, gets
     published, and silently never appears on anybody's phone.
     """
-    with open(args.vectors) as handle:
-        spec = json.load(handle)
+    def not_json(literal):
+        # Python accepts `Infinity`, `-Infinity` and `NaN` as JSON; nothing
+        # else does, and Dart refuses the whole file. Round-tripping this file
+        # through json.dump reintroduces them, which would leave this passing
+        # while the app cannot read the spec at all.
+        raise ValueError(
+            f'{args.vectors} contains the bare literal `{literal}`, which is '
+            'not JSON. Write 1e400 instead -- it is valid, and overflows to '
+            'infinity in every language that reads it.'
+        )
+
+    try:
+        with open(args.vectors) as handle:
+            spec = json.loads(handle.read(), parse_constant=not_json)
+    except ValueError as error:
+        # A message, not a traceback: this is a thing somebody has to fix.
+        sys.exit(str(error))
 
     failures = 0
     for case in spec['cases']:
